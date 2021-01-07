@@ -7,3 +7,6 @@
 #### test image: 3000 xxx.dicom
 #### train image: 15000 xxx.dicom
 #### train.csv has more than 67000 data of 15 class(No finding included)
+
+### Used scripts to format the dataset to coco, the scripts is in another repository 'dataset_prepare'.
+#### 'img2csv.py' 'csv2coco.py'
