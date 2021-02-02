@@ -1,2 +1,2 @@
 # Kaggle
-Open source my Kaggle compete.(Still Learning)
+Open source my Kaggle compete.
