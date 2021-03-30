@@ -1,7 +1,8 @@
 fp16 = dict(loss_scale=512.)
 model = dict(
     type='CascadeRCNN',
-    pretrained='open-mmlab://resnext101_64x4d',
+    #pretrained='open-mmlab://resnext101_64x4d',
+    pretrained=None,
     backbone=dict(
         type='ResNeXt',
         depth=101,
@@ -9,6 +10,7 @@ model = dict(
         out_indices=(0, 1, 2, 3),
         frozen_stages=1,
         norm_cfg=dict(type='SyncBN', requires_grad=True),
+        # norm_cfg = dict(type='GN', num_groups=32, requires_grad=True),  # not working
         norm_eval=True,
         style='pytorch',
         groups=64,
@@ -17,7 +19,7 @@ model = dict(
         # stage_with_dcn=(False, True, True, True)
         ),
     neck=dict(
-        type='FPN',
+        type='FPN', #pafpn rfpn
         in_channels=[256, 512, 1024, 2048],
         out_channels=256,
         num_outs=5),
@@ -29,16 +31,14 @@ model = dict(
             type='AnchorGenerator',
             scales=[8],
             ratios=[0.5, 1.0, 2.0, 3.0, 5.0],
+            # ratios=[0.5, 1.0, 2.0],
             strides=[4, 8, 16, 32, 64]),
         bbox_coder=dict(
             type='DeltaXYWHBBoxCoder',
             target_means=[0.0, 0.0, 0.0, 0.0],
             target_stds=[1.0, 1.0, 1.0, 1.0]),
         loss_cls=dict(
-            type='CrossEntropyLoss', 
-            use_sigmoid=True,
-            loss_weight=1.0
-            ),
+            type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
         loss_bbox=dict(
             type='SmoothL1Loss', beta=0.1111111111111111, loss_weight=1.0)),
         #reg_decoded_bbox=True,
@@ -67,10 +67,11 @@ model = dict(
                 loss_cls=dict(
                     type='CrossEntropyLoss',
                     use_sigmoid=False,
-                    loss_weight=1.0,
-                         ),
+                    loss_weight=1.0),
                 loss_bbox=dict(type='SmoothL1Loss', beta=1.0,
                                loss_weight=1.0)),
+                #reg_decoded_bbox=True,
+                #loss_bbox=dict(type='GIoULoss', loss_weight=5.0)),
             dict(
                 type='Shared2FCBBoxHead',
                 in_channels=256,
@@ -85,10 +86,11 @@ model = dict(
                 loss_cls=dict(
                     type='CrossEntropyLoss',
                     use_sigmoid=False,
-                    loss_weight=1.0,
-                         ),
+                    loss_weight=1.0),
                 loss_bbox=dict(type='SmoothL1Loss', beta=1.0,
                                loss_weight=1.0)),
+                #reg_decoded_bbox=True,
+                #loss_bbox=dict(type='GIoULoss', loss_weight=5.0)),
             dict(
                 type='Shared2FCBBoxHead',
                 in_channels=256,
@@ -103,8 +105,7 @@ model = dict(
                 loss_cls=dict(
                     type='CrossEntropyLoss',
                     use_sigmoid=False,
-                    loss_weight=1.0,
-                    ),
+                    loss_weight=1.0),
                 loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0))
                 #reg_decoded_bbox=True,
                 #loss_bbox=dict(type='GIoULoss', loss_weight=5.0))
@@ -113,9 +114,9 @@ train_cfg = dict(
     rpn=dict(
         assigner=dict(
             type='MaxIoUAssigner',
-            pos_iou_thr=0.7,#0.7
-            neg_iou_thr=0.3,#0.3
-            min_pos_iou=0.3,#0.3
+            pos_iou_thr=0.7,
+            neg_iou_thr=0.3,
+            min_pos_iou=0.3,
             match_low_quality=True,
             ignore_iof_thr=-1),
         sampler=dict(
@@ -144,14 +145,27 @@ train_cfg = dict(
                 match_low_quality=False,
                 ignore_iof_thr=-1),
             sampler=dict(
-               type='OHEMSampler',
-               #type='RandomSampler',
-               num=512,
-               pos_fraction=0.25,
-               neg_pos_ub=-1,
-               add_gt_as_proposals=True),
+                type='OHEMSampler',
+                num=512,
+                pos_fraction=0.25,
+                neg_pos_ub=-1,
+                add_gt_as_proposals=True),
             pos_weight=-1,
             debug=False),
+            #sampler=dict(
+            #    _delete_=True,
+            #    type='CombinedSampler',
+            #    num=512,
+            #    pos_fraction=0.25,
+            #    add_gt_as_proposals=True,
+            #    pos_sampler=dict(type='InstanceBalancedPosSampler'),
+            #    neg_sampler=dict(
+            #        type='IoUBalancedNegSampler',
+            #        floor_thr=-1,
+            #        floor_fraction=0,
+            #        num_bins=3)),
+            #    pos_weight=-1,
+            #    debug=False),
         dict(
             assigner=dict(
                 type='MaxIoUAssigner',
@@ -161,14 +175,27 @@ train_cfg = dict(
                 match_low_quality=False,
                 ignore_iof_thr=-1),
             sampler=dict(
-               type='OHEMSampler',
-               #type='RandomSampler',
-               num=512,
-               pos_fraction=0.25,
-               neg_pos_ub=-1,
-               add_gt_as_proposals=True),
+                type='OHEMSampler',
+                num=512,
+                pos_fraction=0.25,
+                neg_pos_ub=-1,
+                add_gt_as_proposals=True),
             pos_weight=-1,
             debug=False),
+            #sampler=dict(
+            #    _delete_=True,
+            #    type='CombinedSampler',
+            #    num=512,
+            #    pos_fraction=0.25,
+            #    add_gt_as_proposals=True,
+            #    pos_sampler=dict(type='InstanceBalancedPosSampler'),
+            #    neg_sampler=dict(
+            #        type='IoUBalancedNegSampler',
+            #        floor_thr=-1,
+            #        floor_fraction=0,
+            #        num_bins=3)),
+            #    pos_weight=-1,
+            #    debug=False),
         dict(
             assigner=dict(
                 type='MaxIoUAssigner',
@@ -179,13 +206,26 @@ train_cfg = dict(
                 ignore_iof_thr=-1),
             sampler=dict(
                 type='OHEMSampler',
-                #type='RandomSampler',
                 num=512,
                 pos_fraction=0.25,
                 neg_pos_ub=-1,
                 add_gt_as_proposals=True),
             pos_weight=-1,
             debug=False)
+            #sampler=dict(
+            #    _delete_=True,
+            #    type='CombinedSampler',
+            #    num=512,
+            #    pos_fraction=0.25,
+            #    add_gt_as_proposals=True,
+            #    pos_sampler=dict(type='InstanceBalancedPosSampler'),
+            #    neg_sampler=dict(
+            #        type='IoUBalancedNegSampler',
+            #        floor_thr=-1,
+            #        floor_fraction=0,
+            #        num_bins=3)),
+            #    pos_weight=-1,
+            #    debug=False)
     ])
 test_cfg = dict(
     rpn=dict(
@@ -198,23 +238,42 @@ test_cfg = dict(
     rcnn=dict(
         score_thr=0.0001,
         nms=dict(type='nms', iou_threshold=0.35),
-        max_per_img=400))
+        max_per_img=300))
 dataset_type = 'CocoDataset'
 data_root = 'data/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+albu_train_transforms = [
+    dict(type='RandomRotate90', p=0.5),
+    #dict(type='CLAHE', p=0.5),
+    #dict(type='InvertImg', p=0.5),
+    ]
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=False),
-    dict(type='Resize', img_scale=[(4096, 1200), (4096, 800)], keep_ratio=True),
-    #dict(type='MinIoURandomCrop'),
-    #dict(type='Resize', img_scale=(648, 720), keep_ratio=True),
+    dict(type='Resize', img_scale=[(1400, 800), (1600, 1200)], keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.5),
+    #dict(type='RandomFlip', flip_ratio=0.5, direction='horizontal'),
+    #dict(type='RandomFlip', flip_ratio=0.5, direction='vertical'),
+    #dict(type='BBoxJitter', min=0.9, max=1.1),
+    #dict(type='MixUp', p=0.5, lambd=0.5),
     dict(
         type='Normalize',
         mean=[123.675, 116.28, 103.53],
         std=[58.395, 57.12, 57.375],
         to_rgb=True),
+    dict(
+        type='Albu',
+        transforms=albu_train_transforms,
+        bbox_params=dict(
+        type='BboxParams',
+        format='pascal_voc',
+        label_fields=['gt_labels'],
+        min_visibility=0.0,
+        filter_lost_elements=True),
+        keymap=dict(img='image', gt_bboxes='bboxes'),
+        update_pad_shape=False,
+        skip_img_without_anno=True),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
@@ -223,7 +282,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=[(4096, 600), (4096, 800), (4096, 960), (4096, 1280), (4096, 1600)],
+        img_scale=[(1400, 600), (1400, 800), (1600, 640), (1600, 960), (1600, 1280), (1600, 1600)],
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -240,13 +299,14 @@ test_pipeline = [
 ]
 data = dict(
     samples_per_gpu=3,
-    workers_per_gpu=2,
+    workers_per_gpu=10,
     train=dict(
         type='RepeatDataset',
-        times=2,
+        times=3,
         dataset=dict(
             type=dataset_type,
             ann_file=data_root+'annotations/instances_train2017.json',
+            # ann_file=data_root+'annotations/fused_train2017.json',
             img_prefix=data_root+'images/train2017/',
             pipeline=train_pipeline)),
     val=dict(
@@ -260,15 +320,16 @@ data = dict(
         img_prefix=data_root+'images/test2017/',
         pipeline=test_pipeline))
 evaluation = dict(interval=1, metric='bbox')
-optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.015, momentum=0.9, weight_decay=0.0001)
+#optimizer = dict(type='AdamW', lr=0.0001)
 optimizer_config = dict(grad_clip=None)
 lr_config = dict(
     policy='step',
     warmup='linear',
     warmup_iters=500,
     warmup_ratio=0.001,
-    step=[15, 19])
-total_epochs = 20
+    step=[8, 11])
+total_epochs = 12
 checkpoint_config = dict(interval=1)
 log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook'),
     dict(type='TensorboardLoggerHook')])
@@ -276,6 +337,8 @@ dist_params = dict(backend='nccl')
 log_level = 'INFO'
 #load_from = None
 load_from = 'checkpoints/cascade_rcnn_x101_64x4d_fpn_1x_coco_20200515_075702-43ce6a30.pth'
+#load_from = '0.257.pth'
+#load_from = 'x101/epoch_12.pth'
 resume_from = None
 workflow = [('train', 1)]
 work_dir = './x101'
