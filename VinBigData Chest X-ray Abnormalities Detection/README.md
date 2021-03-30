@@ -10,3 +10,6 @@
 
 ### Used scripts to format the dataset to coco, scripts in another repository 'dataset_prepare'.
 #### 'img2csv.py' 'csv2coco.py'
+
+#### Final Score Public LB: 0.289
+####             Private LB: 
