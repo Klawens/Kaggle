@@ -12,4 +12,4 @@
 #### 'img2csv.py' 'csv2coco.py'
 
 #### Final Score Public LB: 0.289
-####             Private LB: 
+####             Private LB: 0.254
